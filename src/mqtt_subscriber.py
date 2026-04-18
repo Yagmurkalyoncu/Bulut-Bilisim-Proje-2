@@ -1,51 +1,85 @@
+"""
+mqtt_subscriber.py
+-------------------
+MQTT topic'lerini dinler, gelen veriyi AWS Kinesis'e iletir.
+mqtt_publisher.py ile birlikte kullanılır.
+
+Kullanım:
+  Terminal 1: python mqtt_publisher.py
+  Terminal 2: python mqtt_subscriber.py
+"""
+
 import paho.mqtt.client as mqtt
-import boto3
 import json
+import boto3
+import logging
 import os
+import time
 from dotenv import load_dotenv
 
-# .env dosyasındaki AWS bilgilerini yükle 
 load_dotenv()
 
-# AWS Kinesis Yapılandırması [cite: 10, 27]
-kinesis_client = boto3.client(
-    'kinesis',
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-    region_name=os.getenv('AWS_REGION')
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
 )
-STREAM_NAME = os.getenv('KINESIS_STREAM_NAME')
+logger = logging.getLogger(__name__)
 
-# MQTT Yapılandırması [cite: 7]
-MQTT_BROKER = "broker.hivemq.com"
-MQTT_TOPIC = "bulut_bilisim/iot_sensor"
+BROKER      = os.getenv("MQTT_BROKER", "broker.hivemq.com")
+PORT        = int(os.getenv("MQTT_PORT", 1883))
+TOPIC_SUB   = "iot/sensors/+/all"
+STREAM_NAME = os.getenv("KINESIS_STREAM_NAME", "iot-sensor-stream")
+CLIENT_ID   = f"iot-subscriber-{int(time.time())}"
 
-def on_connect(client, userdata, flags, rc, properties=None):
-    print(f"MQTT Broker'a bağlandı. Sonuç: {rc}")
-    client.subscribe(MQTT_TOPIC)
+kinesis = boto3.client(
+    "kinesis",
+    region_name=os.getenv("AWS_REGION", "eu-west-1"),
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+)
+
+received_count = 0
+
+
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        logger.info(f"Broker'a bağlandı. Topic dinleniyor: {TOPIC_SUB}")
+        client.subscribe(TOPIC_SUB, qos=1)
+    else:
+        logger.error(f"Bağlantı hatası: rc={rc}")
+
 
 def on_message(client, userdata, msg):
+    global received_count
     try:
-        # MQTT'den gelen veriyi çöz [cite: 3]
-        payload = msg.payload.decode()
-        data = json.loads(payload)
-        print(f"Veri Alındı: {data}")
+        data = json.loads(msg.payload.decode("utf-8"))
+        received_count += 1
 
-        # Veriyi AWS Kinesis'e gönder [cite: 4, 12]
-        kinesis_client.put_record(
+        # Kinesis'e ilet
+        kinesis.put_record(
             StreamName=STREAM_NAME,
-            Data=json.dumps(data),
-            PartitionKey=data.get('device_id', 'default_id')
+            Data=msg.payload,
+            PartitionKey=data.get("sensor_id", "unknown")
         )
-        print("AWS Kinesis'e başarıyla aktarıldı.")
+        logger.info(
+            f"[#{received_count}] MQTT → Kinesis | "
+            f"Topic: {msg.topic} | "
+            f"Temp: {data.get('temperature')}°C"
+        )
     except Exception as e:
-        print(f"Hata: {e}")
+        logger.error(f"Mesaj işleme hatası: {e}")
 
-# MQTT Client kurulumu [cite: 29]
-client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
-client.on_connect = on_connect
-client.on_message = on_message
 
-print("MQTT dinleniyor...")
-client.connect(MQTT_BROKER, 1883, 60)
-client.loop_forever()
+def main():
+    client = mqtt.Client(client_id=CLIENT_ID)
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    logger.info(f"MQTT Broker'a bağlanılıyor: {BROKER}:{PORT}")
+    client.connect(BROKER, PORT, keepalive=60)
+    logger.info("Dinleniyor... Ctrl+C ile durdur.")
+    client.loop_forever()
+
+
+if __name__ == "__main__":
+    main()
