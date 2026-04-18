@@ -1,0 +1,172 @@
+# IoT Gerçek Zamanlı Veri Akışı Projesi
+
+> 3522 Bulut Bilişim Dersi — Proje 2
+
+## 📌 Proje Özeti
+
+Python ile gerçek zamanlı IoT sensör verisi simüle edilir. WebSocket üzerinden toplanan veriler AWS Kinesis Data Streams'e gönderilir. Lambda fonksiyonu bu veriyi işleyerek DynamoDB'ye kaydeder. Streamlit dashboard ile canlı görselleştirme yapılır.
+
+## 🎥 Proje Videosu
+
+[Video linki buraya eklenecek]
+
+## 🏗️ Sistem Mimarisi
+
+```
+Sensör Simülatörü (Python)
+        ↓ WebSocket (ws://localhost:8765)
+Kinesis Producer
+        ↓ AWS SDK (boto3)
+AWS Kinesis Data Streams
+        ↓ Trigger (otomatik)
+AWS Lambda Fonksiyonu
+        ↓ boto3
+AWS DynamoDB
+        ↑
+Streamlit Dashboard (okuma)
+```
+
+## 🛠️ Kullanılan Teknolojiler
+
+| Katman | Teknoloji |
+|--------|-----------|
+| Backend dili | Python 3.11 |
+| Protokol | WebSocket (`websockets` kütüphanesi) |
+| Alternatif protokol | MQTT (`paho-mqtt`, HiveMQ broker) |
+| Veri akışı | AWS Kinesis Data Streams |
+| İşleme | AWS Lambda |
+| Veritabanı | AWS DynamoDB |
+| Dashboard | Streamlit + Plotly |
+| İzleme | AWS CloudWatch |
+
+## 📁 Proje Yapısı
+
+```
+iot-cloud-project/
+├── src/
+│   ├── sensor_simulator.py   # IoT sensör simülatörü (WebSocket sunucusu)
+│   ├── kinesis_producer.py   # WebSocket → AWS Kinesis köprüsü
+│   ├── mqtt_publisher.py     # MQTT alternatif yayıncı
+│   ├── mqtt_subscriber.py    # MQTT → Kinesis köprüsü
+│   └── aws_setup.py          # AWS kaynak kurulum scripti
+├── lambda/
+│   └── lambda_function.py    # Kinesis → DynamoDB Lambda fonksiyonu
+├── dashboard/
+│   └── dashboard.py          # Streamlit gerçek zamanlı dashboard
+├── docs/
+│   └── report.pdf            # Proje raporu
+├── requirements.txt
+├── .env.example              # Ortam değişkenleri şablonu
+└── README.md
+```
+
+## ⚙️ Kurulum
+
+### 1. Depoyu klonla
+
+```bash
+git clone https://github.com/KULLANICI_ADI/iot-cloud-project.git
+cd iot-cloud-project
+```
+
+### 2. Python ortamı kur
+
+```bash
+python -m venv venv
+source venv/bin/activate        # Linux/Mac
+# venv\Scripts\activate         # Windows
+pip install -r requirements.txt
+```
+
+### 3. Ortam değişkenlerini ayarla
+
+```bash
+cp .env.example .env
+# .env dosyasını düzenle: AWS anahtarlarını gir
+```
+
+### 4. AWS kaynaklarını oluştur
+
+```bash
+python src/aws_setup.py
+```
+
+Bu komut şunları oluşturur:
+- Kinesis Data Stream: `iot-sensor-stream`
+- DynamoDB tablosu: `IoTSensorData`
+- IAM rolü: `iot-lambda-kinesis-role`
+
+### 5. Lambda fonksiyonunu deploy et
+
+```bash
+cd lambda
+zip lambda_function.zip lambda_function.py
+```
+
+AWS Lambda konsolunda:
+1. Yeni fonksiyon oluştur (Python 3.11)
+2. ZIP'i yükle
+3. Trigger: Kinesis stream ekle
+4. IAM rolü: `iot-lambda-kinesis-role`
+
+### 6. Sistemi başlat
+
+**Terminal 1 — Sensör simülatörü:**
+```bash
+python src/sensor_simulator.py
+```
+
+**Terminal 2 — Kinesis producer:**
+```bash
+python src/kinesis_producer.py
+```
+
+**Terminal 3 — Dashboard:**
+```bash
+streamlit run dashboard/dashboard.py
+```
+
+Dashboard: http://localhost:8501
+
+## 📊 Veri Formatı
+
+Her sensör kaydı şu alanları içerir:
+
+```json
+{
+  "device_id": "sensor-ankara-01",
+  "location": "Ankara-Merkez",
+  "timestamp": 1718000000,
+  "datetime": "2024-06-10T12:00:00+00:00",
+  "temperature": 24.35,
+  "humidity": 58.72,
+  "pressure": 1014.5,
+  "light": 320.0,
+  "co2_ppm": 415.3
+}
+```
+
+## 🔧 MQTT Alternatifi
+
+Kinesis yerine MQTT kullanmak için:
+
+```bash
+# Terminal 1
+python src/mqtt_publisher.py
+
+# Terminal 2
+python src/mqtt_subscriber.py
+```
+
+Broker: `broker.hivemq.com:1883` (kayıtsız, ücretsiz)
+
+## 🧹 Temizlik (AWS Ücret Oluşmasın)
+
+```bash
+python src/aws_setup.py --delete
+```
+
+## 📝 Git Commit Geçmişi
+
+Her oturumda yapılan değişiklikler commit edilmiştir.
+Detaylı geçmiş için: `git log --oneline`
