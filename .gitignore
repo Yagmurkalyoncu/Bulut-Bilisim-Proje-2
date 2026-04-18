@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.py[cod]
+
+cat > .env.example << 'EOF'
+AWS_ACCESS_KEY_ID=your_access_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_key_here
+AWS_REGION=eu-west-1
+KINESIS_STREAM_NAME=iot-sensor-stream
+DYNAMODB_TABLE_NAME=IoTSensorData
+WEBSOCKET_HOST=localhost
+WEBSOCKET_PORT=8765
