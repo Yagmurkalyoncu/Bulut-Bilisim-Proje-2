@@ -1,3 +1,4 @@
+
 # IoT Gerçek Zamanlı Veri Akışı Projesi
 
 > 3522 Bulut Bilişim Dersi — Proje 2
@@ -7,9 +8,14 @@
 Python ile gerçek zamanlı IoT sensör verisi simüle edilir. WebSocket üzerinden toplanan veriler AWS Kinesis Data Streams'e gönderilir. Lambda fonksiyonu bu veriyi işleyerek DynamoDB'ye kaydeder. Streamlit dashboard ile canlı görselleştirme yapılır.
 
 ## 🎥 Proje Videosu
-
 [Video linki buraya eklenecek]
 
+## ✅ Sistem Durumu
+- Kinesis Stream: `iot-sensor-stream` (us-east-1)
+- DynamoDB: `IoTSensorData` 
+- Lambda: `iot-kinesis-processor`
+- Dashboard: `streamlit run dashboard/dashboard.py`
+- Sensörler: Ankara-Merkez, Çankaya, Keçiören, Gölbaşı
 ## 🏗️ Sistem Mimarisi
 
 ```
