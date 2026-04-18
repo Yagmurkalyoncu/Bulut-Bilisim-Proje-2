@@ -38,6 +38,7 @@ SENSORS = [
     {"id": "sensor-ankara-01", "location": "Ankara-Merkez",  "floor": 1},
     {"id": "sensor-ankara-02", "location": "Ankara-Çankaya", "floor": 2},
     {"id": "sensor-ankara-03", "location": "Ankara-Keçiören", "floor": 3},
+    {"id": "sensor-ankara-04", "location": "Ankara-Gölbaşı",   "floor": 1},
 ]
 
 
