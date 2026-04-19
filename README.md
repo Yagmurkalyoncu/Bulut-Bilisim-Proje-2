@@ -8,7 +8,7 @@
 Python ile gerçek zamanlı IoT sensör verisi simüle edilir. WebSocket üzerinden toplanan veriler AWS Kinesis Data Streams'e gönderilir. Lambda fonksiyonu bu veriyi işleyerek DynamoDB'ye kaydeder. Streamlit dashboard ile canlı görselleştirme yapılır.
 
 ## 🎥 Proje Videosu
-[Video linki buraya eklenecek]
+https://youtu.be/9Bd3GAjUrng?si=uIQiNuqLXblM1K6B
 
 ## ✅ Sistem Durumu
 - Kinesis Stream: `iot-sensor-stream` (us-east-1)
