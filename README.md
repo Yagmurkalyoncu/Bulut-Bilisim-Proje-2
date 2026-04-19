@@ -38,7 +38,6 @@ Streamlit Dashboard (okuma)
 |--------|-----------|
 | Backend dili | Python 3.11 |
 | Protokol | WebSocket (`websockets` kütüphanesi) |
-| Alternatif protokol | MQTT (`paho-mqtt`, HiveMQ broker) |
 | Veri akışı | AWS Kinesis Data Streams |
 | İşleme | AWS Lambda |
 | Veritabanı | AWS DynamoDB |
@@ -52,15 +51,11 @@ iot-cloud-project/
 ├── src/
 │   ├── sensor_simulator.py   # IoT sensör simülatörü (WebSocket sunucusu)
 │   ├── kinesis_producer.py   # WebSocket → AWS Kinesis köprüsü
-│   ├── mqtt_publisher.py     # MQTT alternatif yayıncı
-│   ├── mqtt_subscriber.py    # MQTT → Kinesis köprüsü
 │   └── aws_setup.py          # AWS kaynak kurulum scripti
 ├── lambda/
 │   └── lambda_function.py    # Kinesis → DynamoDB Lambda fonksiyonu
 ├── dashboard/
 │   └── dashboard.py          # Streamlit gerçek zamanlı dashboard
-├── docs/
-│   └── report.pdf            # Proje raporu
 ├── requirements.txt
 ├── .env.example              # Ortam değişkenleri şablonu
 └── README.md
